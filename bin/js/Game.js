@@ -25,6 +25,9 @@ var Game = /** @class */ (function () {
         this.hero = new Role();
         //初始化角色
         this.hero.init("hero", 0, 1, 0, 30);
+        //设置射击类型
+        this.hero.shootType = 1;
+        //主角的初始位置
         this.hero.pos(200, 500);
         Laya.stage.addChild(this.hero);
         //监听鼠标移动事件
@@ -43,23 +46,51 @@ var Game = /** @class */ (function () {
             //遍历舞台所有的对象，包括背景和主角，转换为 Role 类型
             var role = Laya.stage.getChildAt(i);
             //判断是否为敌机，主角的speed为0
-            if (role) {
+            if (role && role.speed) {
                 //根据飞机的速度改变位置
                 role.y += role.speed;
                 //判断敌机是否移动到显示区域外面
-                if (role.y > 1000) {
+                if (role.y > 1000 || !role.visible || (role.isBullet && role.y < -20)) {
                     //从舞台中移除
                     role.removeSelf();
+                    //回收之前重置属性
+                    role.isBullet = false;
+                    role.visible = true;
                     //回收对象池
                     Laya.Pool.recover("role", role);
                 }
             }
         }
+        //处理发射子弹逻辑
+        if (role.shootType > 0) {
+            //获取当前时间
+            var time = Laya.Browser.now();
+            //如果当前时间大于下次射击时间
+            if (time > role.shootTime) {
+                //更新下次射击时间
+                role.shootTime = time + role.shootInterval;
+                //从对象池中创建一个子弹
+                var bullet = Laya.Pool.getItemByClass("role", Role);
+                //初始化子弹信息
+                bullet.init("bullet1", role.camp, 1, -5, 1);
+                //设置角色为子弹类型
+                bullet.isBullet = true;
+                //设置子弹位置
+                bullet.pos(role.x, role.y - role.hitRadius - 10);
+                //添加到舞台上
+                Laya.stage.addChild(bullet);
+            }
+        }
+        //检测碰撞
+        //如果主角死亡，则停止游戏循环
         //每隔30帧创建新的敌机
-        if (Laya.timer.currFrame % 60 == 0) {
+        if (Laya.timer.currFrame % 60 === 0) {
             this.createEnemy(2);
         }
     };
+    /**
+     * 主角跟随鼠标移动
+     */
     Game.prototype.onMouseMove = function () {
         this.hero.pos(Laya.stage.mouseX, Laya.stage.mouseY);
     };

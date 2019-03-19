@@ -17,15 +17,27 @@ var __extends = (this && this.__extends) || (function () {
 var Role = /** @class */ (function (_super) {
     __extends(Role, _super);
     function Role() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        //射击属性
+        _this.shootType = 0;
+        //射击间隔
+        _this.shootInterval = 500;
+        //下次射击时间
+        _this.shootTime = Laya.Browser.now() + 2000;
+        //当前动作
+        _this.action = "";
+        //是否是子弹
+        _this.isBullet = false;
+        return _this;
     }
     Role.prototype.init = function (_type, _camp, _hp, _speed, _hitRadius) {
+        this.type = _type;
+        this.camp = _camp;
+        this.hp = _hp;
+        this.speed = _speed;
+        this.hitRadius = _hitRadius;
         if (!Role.cached) {
-            this.type = _type;
-            this.camp = _camp;
-            this.hp = _hp;
-            this.speed = _speed;
-            this.hitRadius = _hitRadius;
+            Role.cached = true;
             //缓存飞行动画
             Laya.Animation.createFrames(["war/hero_fly1.png", "war/hero_fly2.png"], "hero_fly");
             //缓存击中爆炸效果
@@ -60,11 +72,24 @@ var Role = /** @class */ (function (_super) {
         if (!this.body) {
             this.body = new Laya.Animation();
             this.addChild(this.body);
+            //添加动画播放完成事件
+            this.body.on(Laya.Event.COMPLETE, this, this.onPlayComplete);
         }
         //播放飞机动画
         this.playAction("fly");
     };
+    Role.prototype.onPlayComplete = function () {
+        if (this.action === "down") {
+            this.body.stop();
+            this.visible = false;
+        }
+        else if (this.action === "hit") {
+            this.playAction("fly");
+        }
+    };
     Role.prototype.playAction = function (action) {
+        //记录当前播放动画的类型
+        this.action = action;
         this.body.play(0, true, this.type + "_" + action);
         //获取动画大小区域
         var bound = this.body.getBounds();
