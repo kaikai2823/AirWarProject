@@ -17,7 +17,7 @@ class Role extends Laya.Sprite{
     //射击间隔
     public shootInterval:number = 500;
     //下次射击时间
-    public shootTime:number = Laya.Browser.now()+2000;
+    public shootTime:number = Laya.Browser.now()+1000;
     //当前动作
     public action:string = "";
     //是否是子弹
@@ -77,8 +77,7 @@ class Role extends Laya.Sprite{
         if(!this.body){
             this.body = new Laya.Animation();
             this.addChild(this.body);
-
-            //添加动画播放完成事件
+            //添加动画播放完成事件，给每一个新创建的body增加一个监听事件
             this.body.on(Laya.Event.COMPLETE,this,this.onPlayComplete);
         }
         //播放飞机动画
@@ -97,7 +96,7 @@ class Role extends Laya.Sprite{
 
         //记录当前播放动画的类型
         this.action = action;
-
+        //动画播放控制，根据不同的类型播放动画
         this.body.play(0,true,this.type+"_"+action);
         //获取动画大小区域
         var bound:Laya.Rectangle = this.body.getBounds();

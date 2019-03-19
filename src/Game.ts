@@ -66,10 +66,11 @@ class Game{
                 if(time>role.shootTime){
                     //更新下次射击时间
                     role.shootTime = time + role.shootInterval;
+
                     //从对象池中创建一个子弹
                     var bullet:Role = Laya.Pool.getItemByClass("role",Role);
                     //初始化子弹信息
-                    bullet.init("bullet1",role.camp,1,-5,1);
+                    bullet.init("bullet1",role.camp,1,-10,1);
                     //设置角色为子弹类型
                     bullet.isBullet = true;
                     //设置子弹位置
@@ -116,7 +117,7 @@ class Game{
         //减血
         role.hp -= lostHp;
         if(role.hp>0){
-            //如果未死亡
+            //如果未死亡，播放被击打画面
             role.playAction("hit");
         }else{
             if(role.isBullet){

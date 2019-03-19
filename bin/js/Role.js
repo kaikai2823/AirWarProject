@@ -21,9 +21,9 @@ var Role = /** @class */ (function (_super) {
         //射击属性
         _this.shootType = 0;
         //射击间隔
-        _this.shootInterval = 500;
+        _this.shootInterval = 100;
         //下次射击时间
-        _this.shootTime = Laya.Browser.now() + 2000;
+        _this.shootTime = Laya.Browser.now() + 1000;
         //当前动作
         _this.action = "";
         //是否是子弹
@@ -72,7 +72,7 @@ var Role = /** @class */ (function (_super) {
         if (!this.body) {
             this.body = new Laya.Animation();
             this.addChild(this.body);
-            //添加动画播放完成事件
+            //添加动画播放完成事件，给每一个新创建的body增加一个监听事件
             this.body.on(Laya.Event.COMPLETE, this, this.onPlayComplete);
         }
         //播放飞机动画
@@ -90,6 +90,7 @@ var Role = /** @class */ (function (_super) {
     Role.prototype.playAction = function (action) {
         //记录当前播放动画的类型
         this.action = action;
+        //动画播放控制，根据不同的类型播放动画
         this.body.play(0, true, this.type + "_" + action);
         //获取动画大小区域
         var bound = this.body.getBounds();

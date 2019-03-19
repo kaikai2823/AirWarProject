@@ -118,7 +118,7 @@ var Game = /** @class */ (function () {
         //减血
         role.hp -= lostHp;
         if (role.hp > 0) {
-            //如果未死亡
+            //如果未死亡，播放被击打画面
             role.playAction("hit");
         }
         else {
