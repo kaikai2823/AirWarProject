@@ -38,7 +38,7 @@ var Game = /** @class */ (function () {
         Laya.timer.frameLoop(1, this, this.onLoop);
     };
     /**
-     * 敌机的创建，移动和回收
+     * 遍历舞台上所有的对象，并且更改状态，敌机的创建，移动和回收
      */
     Game.prototype.onLoop = function () {
         //遍历舞台上所有飞机，更改飞机状态
@@ -60,32 +60,75 @@ var Game = /** @class */ (function () {
                     Laya.Pool.recover("role", role);
                 }
             }
-        }
-        //处理发射子弹逻辑
-        if (role.shootType > 0) {
-            //获取当前时间
-            var time = Laya.Browser.now();
-            //如果当前时间大于下次射击时间
-            if (time > role.shootTime) {
-                //更新下次射击时间
-                role.shootTime = time + role.shootInterval;
-                //从对象池中创建一个子弹
-                var bullet = Laya.Pool.getItemByClass("role", Role);
-                //初始化子弹信息
-                bullet.init("bullet1", role.camp, 1, -5, 1);
-                //设置角色为子弹类型
-                bullet.isBullet = true;
-                //设置子弹位置
-                bullet.pos(role.x, role.y - role.hitRadius - 10);
-                //添加到舞台上
-                Laya.stage.addChild(bullet);
+            //处理发射子弹逻辑，根据射击类型判断是哪个阵营的
+            if (role.shootType > 0) {
+                //获取当前时间
+                var time = Laya.Browser.now();
+                //如果当前时间大于下次射击时间
+                if (time > role.shootTime) {
+                    //更新下次射击时间
+                    role.shootTime = time + role.shootInterval;
+                    //从对象池中创建一个子弹
+                    var bullet = Laya.Pool.getItemByClass("role", Role);
+                    //初始化子弹信息
+                    bullet.init("bullet1", role.camp, 1, -5, 1);
+                    //设置角色为子弹类型
+                    bullet.isBullet = true;
+                    //设置子弹位置
+                    bullet.pos(role.x, role.y - role.hitRadius - 10);
+                    //添加到舞台上
+                    Laya.stage.addChild(bullet);
+                }
             }
         }
         //检测碰撞
+        for (var i = Laya.stage.numChildren - 1; i > 0; i--) {
+            //获取角色对象1
+            var role1 = Laya.stage.getChildAt(i);
+            if (role1.hp < 1)
+                continue;
+            for (var j = i - 1; j > 0; j--) {
+                //如果角色死亡，请忽略
+                if (!role.visible)
+                    continue;
+                //获取角色对象2
+                var role2 = Laya.stage.getChildAt(j);
+                if (role2.hp > 0 && role1.camp != role2.camp) {
+                    //计算碰撞区域
+                    var hitRadius = role1.hitRadius + role2.hitRadius;
+                    //根据距离判断是否碰撞
+                    if (Math.abs(role1.x - role2.x) < hitRadius && Math.abs(role1.y - role2.y) < hitRadius) {
+                        //碰撞之后掉血
+                        this.lostHp(role1, 1);
+                        this.lostHp(role2, 1);
+                    }
+                }
+            }
+        }
         //如果主角死亡，则停止游戏循环
+        if (this.hero.hp < 1) {
+            Laya.timer.clear(this, this.onLoop);
+        }
         //每隔30帧创建新的敌机
         if (Laya.timer.currFrame % 60 === 0) {
             this.createEnemy(2);
+        }
+    };
+    Game.prototype.lostHp = function (role, lostHp) {
+        //减血
+        role.hp -= lostHp;
+        if (role.hp > 0) {
+            //如果未死亡
+            role.playAction("hit");
+        }
+        else {
+            if (role.isBullet) {
+                //如果是子弹
+                role.visible = false;
+            }
+            else {
+                role.playAction("down");
+            }
         }
     };
     /**
